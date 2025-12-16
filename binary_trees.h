@@ -30,6 +30,7 @@ binary_tree_t *binary_tree_node(binary_tree_t *parent, int value);
 binary_tree_t *binary_tree_insert_left(binary_tree_t *parent, int value);
 binary_tree_t *binary_tree_insert_right(binary_tree_t *parent, int value);
 binary_tree_t *binary_tree_rotate_left(binary_tree_t *tree);
+binary_tree_t *binary_tree_rotate_right(binary_tree_t *tree);
 void binary_tree_delete(binary_tree_t *tree);
 void binary_tree_postorder(const binary_tree_t *tree, void (*func)(int));
 void binary_tree_inorder(const binary_tree_t *tree, void (*func)(int));
