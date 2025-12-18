@@ -1,10 +1,26 @@
 #include "binary_trees.h"
 
+/**
+ * avl_set_parent - Set a new parent for a node and update its parent pointer
+ * @node: Pointer to the node to update
+ * @parent: Pointer to the new parent node
+ *
+ * Return: Nothing
+ */
+
 static void avl_set_parent(avl_t *node, avl_t *parent)
 {
 	if (node)
 		node->parent = parent;
 }
+
+/**
+ * avl_rebalance - Rebalance an AVL tree starting from a given node
+ * @tree: Double pointer to the root of the AVL tree
+ * @node: Pointer to the node where rebalancing starts
+ *
+ * Return: Pointer to the new subtree root after rebalancing
+ */
 
 static avl_t *avl_rebalance(avl_t *node)
 {

@@ -1,5 +1,13 @@
 #include "binary_trees.h"
 
+/**
+ * avl_find - Find a node by value in an AVL tree
+ * @root: Pointer to the root node of the AVL tree
+ * @value: Value to search for
+ *
+ * Return: Pointer to the node if found, otherwise NULL
+ */
+
 static avl_t *avl_find(avl_t *root, int value)
 {
 	while (root)
