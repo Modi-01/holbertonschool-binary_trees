@@ -1,6 +1,12 @@
 #include "binary_trees.h"
 #include <stdlib.h>
 
+/**
+ * min_node - finds the minimum node in a subtree
+ * @node: root of the subtree
+ *
+ * Return: pointer to the minimum node, or NULL
+ */
 static avl_t *min_node(avl_t *node)
 {
 	while (node && node->left)
@@ -8,66 +14,13 @@ static avl_t *min_node(avl_t *node)
 	return (node);
 }
 
-static void link_parent(avl_t **root, avl_t *parent, avl_t *old, avl_t *newn)
-{
-	if (!parent)
-		*root = newn;
-	else if (parent->left == old)
-		parent->left = newn;
-	else
-		parent->right = newn;
-
-	if (newn)
-		newn->parent = parent;
-}
-
-static void rebalance_at(avl_t **root, avl_t *node)
-{
-	int bal, child_bal;
-	avl_t *parent, *newn;
-
-	if (!node)
-		return;
-
-	parent = node->parent;
-	bal = binary_tree_balance(node);
-
-	if (bal > 1)
-	{
-		child_bal = binary_tree_balance(node->left);
-		if (child_bal < 0)
-			node->left = binary_tree_rotate_left(node->left);
-		newn = binary_tree_rotate_right(node);
-	}
-	else if (bal < -1)
-	{
-		child_bal = binary_tree_balance(node->right);
-		if (child_bal > 0)
-			node->right = binary_tree_rotate_right(node->right);
-		newn = binary_tree_rotate_left(node);
-	}
-	else
-		return;
-
-	link_parent(root, parent, node, newn);
-}
-
-static void rebalance_up(avl_t **root, avl_t *from)
-{
-	avl_t *cur, *next;
-
-	cur = from;
-	while (cur)
-	{
-		next = cur->parent;
-		rebalance_at(root, cur);
-		if (next && next->parent)
-			cur = next->parent;
-		else
-			cur = next;
-	}
-}
-
+/**
+ * find_node - searches for a value in a BST/AVL tree
+ * @root: pointer to the root node
+ * @value: value to find
+ *
+ * Return: pointer to the node containing value, or NULL
+ */
 static avl_t *find_node(avl_t *root, int value)
 {
 	while (root)
@@ -82,37 +35,63 @@ static avl_t *find_node(avl_t *root, int value)
 	return (NULL);
 }
 
-static avl_t *remove_one(avl_t **root, avl_t *node)
+/**
+ * rebalance_up - rebalances an AVL tree from a node up to the root
+ * @root: address of the root pointer
+ * @node: start node (usually parent of deleted node)
+ */
+static void rebalance_up(avl_t **root, avl_t *node)
 {
-	avl_t *child, *parent;
+	int bal, child_bal;
+	avl_t *parent, *newn;
 
-	child = node->left ? node->left : node->right;
-	parent = node->parent;
+	while (node)
+	{
+		parent = node->parent;
+		bal = binary_tree_balance(node);
+		newn = NULL;
 
-	if (child)
-		child->parent = parent;
+		if (bal > 1)
+		{
+			child_bal = binary_tree_balance(node->left);
+			if (child_bal < 0)
+				node->left = binary_tree_rotate_left(node->left);
+			newn = binary_tree_rotate_right(node);
+		}
+		else if (bal < -1)
+		{
+			child_bal = binary_tree_balance(node->right);
+			if (child_bal > 0)
+				node->right = binary_tree_rotate_right(node->right);
+			newn = binary_tree_rotate_left(node);
+		}
 
-	if (!parent)
-		*root = child;
-	else if (parent->left == node)
-		parent->left = child;
-	else
-		parent->right = child;
+		if (newn)
+		{
+			if (!parent)
+				*root = newn;
+			else if (parent->left == node)
+				parent->left = newn;
+			else
+				parent->right = newn;
+			newn->parent = parent;
+		}
 
-	free(node);
-	return (parent);
+		node = parent;
+	}
 }
 
 /**
  * avl_remove - removes a node from an AVL tree
- * @root: pointer to root node
- * @value: value to remove
+ * @root: pointer to the root node of the tree
+ * @value: value to remove in the tree
  *
- * Return: new root after removal/rebalancing
+ * Return: pointer to the new root node of the tree after removing the desired
+ * value, and after rebalancing
  */
 avl_t *avl_remove(avl_t *root, int value)
 {
-	avl_t *node, *succ, *start;
+	avl_t *node, *succ, *child, *parent;
 
 	node = find_node(root, value);
 	if (!node)
@@ -125,8 +104,21 @@ avl_t *avl_remove(avl_t *root, int value)
 		node = succ;
 	}
 
-	start = remove_one(&root, node);
-	rebalance_up(&root, start);
+	child = node->left ? node->left : node->right;
+	parent = node->parent;
+
+	if (child)
+		child->parent = parent;
+
+	if (!parent)
+		root = child;
+	else if (parent->left == node)
+		parent->left = child;
+	else
+		parent->right = child;
+
+	free(node);
+	rebalance_up(&root, parent);
 
 	return (root);
 }
