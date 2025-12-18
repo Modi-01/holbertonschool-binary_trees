@@ -2,19 +2,19 @@
 
 /**
  * build_avl - Builds an AVL tree from a sorted array (recursive helper)
- * @parent: Parent node of the subtree to create
  * @array: Pointer to the first element of the array
- * @start: Start index (inclusive)
+ * @start: Start index
  * @end: End index (inclusive)
+ * @parent: Parent node
  *
- * Return: Pointer to the root of the created subtree, or NULL on failure
+ * Return: Pointer to the created node, or NULL on failure
  */
-static avl_t *build_avl(avl_t *parent, int *array, int start, int end)
+static avl_t *build_avl(int *array, size_t start, size_t end, avl_t *parent)
 {
+	size_t mid;
 	avl_t *node;
-	int mid;
 
-	if (start > end)
+	if (!array || start > end)
 		return (NULL);
 
 	mid = start + (end - start) / 2;
@@ -23,8 +23,10 @@ static avl_t *build_avl(avl_t *parent, int *array, int start, int end)
 	if (!node)
 		return (NULL);
 
-	node->left = build_avl(node, array, start, mid - 1);
-	node->right = build_avl(node, array, mid + 1, end);
+	if (mid > start)
+		node->left = build_avl(array, start, mid - 1, node);
+	if (mid < end)
+		node->right = build_avl(array, mid + 1, end, node);
 
 	return (node);
 }
@@ -41,5 +43,5 @@ avl_t *sorted_array_to_avl(int *array, size_t size)
 	if (!array || size == 0)
 		return (NULL);
 
-	return (build_avl(NULL, array, 0, (int)size - 1));
+	return (build_avl(array, 0, size - 1, NULL));
 }
