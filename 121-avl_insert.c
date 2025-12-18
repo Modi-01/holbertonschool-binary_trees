@@ -1,100 +1,120 @@
 #include "binary_trees.h"
 
-/**
- * avl_set_parent - Set a new parent for a node and update its parent pointer
- * @node: Pointer to the node to update
- * @parent: Pointer to the new parent node
- *
- * Return: Nothing
- */
+static avl_t *avl_rebalance_node(avl_t *node);
+static avl_t *avl_insert_rec(avl_t *root, avl_t *parent, int value,
+	int *inserted, avl_t **created);
 
-static void avl_set_parent(avl_t *node, avl_t *parent)
+/**
+ * avl_insert - Inserts a value in an AVL Tree
+ * @tree: Double pointer to the root node of the AVL tree
+ * @value: Value to insert
+ *
+ * Return: Pointer to the created node, or NULL on failure/duplicate
+ */
+avl_t *avl_insert(avl_t **tree, int value)
 {
-	if (node)
-		node->parent = parent;
+	int inserted;
+	avl_t *created;
+
+	if (!tree)
+		return (NULL);
+
+	inserted = 0;
+	created = NULL;
+
+	*tree = avl_insert_rec(*tree, NULL, value, &inserted, &created);
+
+	if (!inserted)
+		return (NULL);
+
+	return (created);
 }
 
 /**
- * avl_rebalance - Rebalance an AVL tree starting from a given node
- * @tree: Double pointer to the root of the AVL tree
- * @node: Pointer to the node where rebalancing starts
+ * avl_insert_rec - Recursively insert then rebalance a subtree
+ * @root: Current subtree root
+ * @parent: Parent of current subtree root
+ * @value: Value to insert
+ * @inserted: Set to 1 if a new node was created
+ * @created: Output pointer to the created node
  *
- * Return: Pointer to the new subtree root after rebalancing
+ * Return: New subtree root after rebalancing
  */
-
-static avl_t *avl_rebalance(avl_t *node)
+static avl_t *avl_insert_rec(avl_t *root, avl_t *parent, int value,
+	int *inserted, avl_t **created)
 {
-	int bf;
+	if (!root)
+	{
+		*created = binary_tree_node(parent, value);
+		if (!*created)
+			return (NULL);
+		*inserted = 1;
+		return (*created);
+	}
+
+	if (value < root->n)
+	{
+		root->left = avl_insert_rec(root->left, root, value, inserted, created);
+		if (root->left)
+			root->left->parent = root;
+	}
+	else if (value > root->n)
+	{
+		root->right = avl_insert_rec(root->right, root, value, inserted, created);
+		if (root->right)
+			root->right->parent = root;
+	}
+	else
+	{
+		*inserted = 0;
+		*created = NULL;
+		return (root);
+	}
+
+	return (avl_rebalance_node(root));
+}
+
+/**
+ * avl_rebalance_node - Rebalance an AVL node if needed
+ * @node: Pointer to the node to rebalance
+ *
+ * Return: New root of the subtree after rotation(s)
+ */
+static avl_t *avl_rebalance_node(avl_t *node)
+{
+	int balance;
+	avl_t *parent, *new_root;
 
 	if (!node)
 		return (NULL);
 
-	bf = binary_tree_balance(node);
+	parent = node->parent;
+	balance = binary_tree_balance(node);
+	new_root = node;
 
-	if (bf > 1)
+	if (balance > 1)
 	{
 		if (binary_tree_balance(node->left) < 0)
+		{
 			node->left = binary_tree_rotate_left(node->left);
-		node = binary_tree_rotate_right(node);
+			if (node->left)
+				node->left->parent = node;
+		}
+		new_root = binary_tree_rotate_right(node);
 	}
-	else if (bf < -1)
+	else if (balance < -1)
 	{
 		if (binary_tree_balance(node->right) > 0)
+		{
 			node->right = binary_tree_rotate_right(node->right);
-		node = binary_tree_rotate_left(node);
+			if (node->right)
+				node->right->parent = node;
+		}
+		new_root = binary_tree_rotate_left(node);
 	}
 
-	return (node);
-}
+	if (new_root)
+		new_root->parent = parent;
 
-static avl_t *avl_insert_rec(avl_t **root, avl_t *parent, int value,
-			    avl_t **new_node)
-{
-	if (*root == NULL)
-	{
-		*root = (avl_t *)binary_tree_node(parent, value);
-		*new_node = *root;
-		return (*root);
-	}
-
-	if (value < (*root)->n)
-	{
-		(*root)->left = avl_insert_rec((avl_t **)&(*root)->left, *root,
-					       value, new_node);
-	}
-	else if (value > (*root)->n)
-	{
-		(*root)->right = avl_insert_rec((avl_t **)&(*root)->right, *root,
-						value, new_node);
-	}
-	else
-	{
-		*new_node = NULL;
-		return (*root);
-	}
-
-	*root = avl_rebalance(*root);
-	avl_set_parent(*root, parent);
-
-	return (*root);
-}
-
-/**
- * avl_insert - Inserts a value in an AVL Tree
- * @tree: double pointer to the root node
- * @value: value to insert
- *
- * Return: pointer to the created node, or NULL on failure/duplicate
- */
-avl_t *avl_insert(avl_t **tree, int value)
-{
-	avl_t *new_node;
-
-	if (tree == NULL)
-		return (NULL);
-
-	new_node = NULL;
-	(void)avl_insert_rec(tree, NULL, value, &new_node);
-
-	return (new_node);
+	return (new_root);
 }
