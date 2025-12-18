@@ -1,5 +1,19 @@
 #include "binary_trees.h"
 #include <stdlib.h>
+#include <stddef.h>
+
+/**
+ * bt_size - counts nodes in a binary tree
+ * @tree: pointer to root node
+ *
+ * Return: number of nodes
+ */
+static size_t bt_size(const binary_tree_t *tree)
+{
+	if (!tree)
+		return (0);
+	return (1 + bt_size(tree->left) + bt_size(tree->right));
+}
 
 /**
  * binary_tree_is_complete - checks if a binary tree is complete
@@ -16,7 +30,7 @@ int binary_tree_is_complete(const binary_tree_t *tree)
 	if (!tree)
 		return (0);
 
-	size = binary_tree_size(tree);
+	size = bt_size(tree);
 	q = malloc(sizeof(*q) * size);
 	if (!q)
 		return (0);
@@ -25,16 +39,26 @@ int binary_tree_is_complete(const binary_tree_t *tree)
 	while (front < back)
 	{
 		node = q[front++];
+
 		if (node->left)
-		{ if (seen_null) { free(q); return (0); } q[back++] = node->left; }
+		{
+			if (seen_null)
+				return (free(q), 0);
+			q[back++] = node->left;
+		}
 		else
 			seen_null = 1;
 
 		if (node->right)
-		{ if (seen_null) { free(q); return (0); } q[back++] = node->right; }
+		{
+			if (seen_null)
+				return (free(q), 0);
+			q[back++] = node->right;
+		}
 		else
 			seen_null = 1;
 	}
+
 	free(q);
 	return (1);
 }
